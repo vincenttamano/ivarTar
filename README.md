@@ -1,10 +1,8 @@
-# React + Vite
+## IVARtar Arena
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+IVARtar Arena is a React turn-based elemental battle game controlled by webcam hand gestures. Choose an elemental attunement, read the opponent's state, and chain moves through the camera or the on-screen controls.
 
-IVARtar
-
-IVARtar is a React turn-based elemental battle game controlled by webcam hand gestures. It uses a Teachable Machine image classification model to recognize battle moves.
+The battle HUD keeps the camera, fighter panels, move controls, stickman arena, and combat log inside the browser viewport.
 
 ## Requirements
 
@@ -61,6 +59,8 @@ Special Attack
 
 `None` is treated as neutral and will not lock in a battle move. The app requires a prediction above the confidence threshold to begin its debounce timer.
 
+If gesture detection becomes stuck, use the `Reset` control in the camera header. Manual move buttons remain available when camera access or model loading fails.
+
 ## Start Development Server
 
 ```bash
@@ -84,17 +84,19 @@ npm run preview   # Preview the production build locally
 npm run lint      # Run Oxlint
 ```
 
-## Gameplay Defaults
+## Gameplay
 
-- Players start at Level 1 with 100 HP and 3 Energy.
-- Energy regenerates by 1 after each turn, up to the level maximum.
-- Basic Attack costs 1 Energy and deals 10 base damage.
-- Special Attack costs 2 Energy and deals 20 base damage.
-- Basic Defend reduces incoming damage by 50% for the turn.
-- Special Defend reduces incoming damage by 80% for the turn.
-- Ultimate costs 3 Energy, deals 35 damage, and ignores defense.
-- Fire, Water, Air, and Earth use the configured elemental matchups.
-- IVARtar is currently neutral against every element.
+- Spin the attunement wheel to choose Fire, Water, Air, Earth, or the rare IVARtar profile.
+- Each element provides Attack, Defend, Special Attack, Special Defend, and Ultimate moves.
+- IVARtar can choose one move for each slot from all elemental skill sets before entering the arena.
+- Energy is spent when a move is executed and restored at the start of the fighter's turn.
+- The Ultimate costs 3 Energy, then recharges over three turns before it can be used again.
+- Using an Ultimate automatically ends the current turn after its effects resolve.
+- End Turn is available beside the move controls when no further action is needed.
+
+## Responsive Layout
+
+The battle screen is fitted to the browser viewport rather than the document flow. On desktop and tablet, the camera sits beside the User/VS/Enemy stack. On narrow screens, the sections stack vertically and the move controls remain usable without page scrolling.
 
 ## Production Build
 
@@ -105,14 +107,3 @@ npm run build
 ```
 
 The generated files are placed in `dist/`. Deploy that folder with HTTPS so browsers can grant webcam access.
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
