@@ -260,6 +260,13 @@ export function BattleScreen({
           playerElement={player.element}
           opponentElement={opponent.element}
           activeAction={activeAction}
+          playerSpirits={player.spirits}
+          playerGolemHp={player.golemHp}
+          playerGolemMaxHp={player.maxGolemHp}
+          opponentSpirits={opponent.spirits}
+          opponentGolemHp={opponent.golemHp}
+          opponentGolemMaxHp={opponent.maxGolemHp}
+
         />
 
         <div className="combat-log-container glass-panel">
