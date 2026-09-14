@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as tmImage from '@teachablemachine/image';
 import { GESTURE_SLOTS } from '../data/elements.js';
 
-const MODEL_URL = '/model/';
+const MODEL_URL = `${import.meta.env.BASE_URL}model/`;
 const CONFIDENCE_THRESHOLD = 0.85;
 const DEBOUNCE_MS = 1100; // 1.1s hold time required
 

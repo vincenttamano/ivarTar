@@ -18,7 +18,7 @@ export const ELEMENTS = {
     color: '#38bdf8',
     accent: '#7dd3fc',
     bgGradient: 'linear-gradient(135deg, #0284c7 0%, #0f172a 100%)',
-    avatarImg: '/model/air.jpg',
+    avatarImg: `${import.meta.env.BASE_URL}model/air.jpg`,
     skills: {
       atk: {
         id: 'air_atk',
@@ -90,7 +90,7 @@ export const ELEMENTS = {
     color: '#f97316',
     accent: '#fdba74',
     bgGradient: 'linear-gradient(135deg, #c2410c 0%, #180905 100%)',
-    avatarImg: '/model/fire.jpg',
+    avatarImg: `${import.meta.env.BASE_URL}model/fire.jpg`,
     skills: {
       atk: {
         id: 'fire_atk',
@@ -160,7 +160,7 @@ export const ELEMENTS = {
     color: '#10b981',
     accent: '#6ee7b7',
     bgGradient: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)',
-    avatarImg: '/model/earth.png',
+    avatarImg: `${import.meta.env.BASE_URL}model/earth.png`,
     skills: {
       atk: {
         id: 'earth_atk',
@@ -230,7 +230,7 @@ export const ELEMENTS = {
     color: '#06b6d4',
     accent: '#67e8f9',
     bgGradient: 'linear-gradient(135deg, #0e7490 0%, #032b37 100%)',
-    avatarImg: '/model/water.png',
+    avatarImg: `${import.meta.env.BASE_URL}model/water.png`,
     skills: {
       atk: {
         id: 'water_atk',
@@ -300,7 +300,7 @@ export const ELEMENTS = {
     accent: '#f43f5e',
     bgGradient: 'linear-gradient(135deg, #7e22ce 0%, #431407 50%, #064e3b 100%)',
     isJackpot: true,
-    avatarImg: '/model/ivartar.jpg',
+    avatarImg: `${import.meta.env.BASE_URL}model/ivartar.jpg`,
     skills: {
       atk: {
         id: 'ivar_atk',
