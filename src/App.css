@@ -143,6 +143,38 @@ body {
   border-color: #38bdf8;
 }
 
+.element-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+}
+
+.element-select-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.element-select-group select,
+.loadout-field select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  font: inherit;
+  outline: none;
+}
+
+.element-select-group select:focus,
+.loadout-field select:focus {
+  border-color: #38bdf8;
+}
+
 /* Wheel Canvas Box */
 .wheel-stage {
   position: relative;

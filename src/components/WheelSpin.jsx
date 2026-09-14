@@ -126,6 +126,23 @@ export function WheelSpin({ onAttuned }) {
     }, 4000);
   };
 
+  const handleElementSelect = (elementId) => {
+    setSelectedElement(elementId || null);
+    setShowJackpotEffect(elementId === 'IVARtar');
+
+    if (elementId === 'IVARtar') {
+      setSelectedMoves({
+        atk: ELEMENTS.IVARtar.skills.atk,
+        def: ELEMENTS.IVARtar.skills.def,
+        atkS: ELEMENTS.IVARtar.skills.atkS,
+        defS: ELEMENTS.IVARtar.skills.defS,
+        ss: ELEMENTS.IVARtar.skills.ss
+      });
+    } else {
+      setSelectedMoves({});
+    }
+  };
+
   const handleEnterArena = () => {
     if (!selectedElement) return;
     onAttuned({
@@ -152,7 +169,7 @@ export function WheelSpin({ onAttuned }) {
         <div className="brand-header">
           <span className="brand-badge">ELEMENTAL BATTLER</span>
           <h1>Attune Your Spirit</h1>
-          <p className="subtext">Enter your avatar tag and spin the element wheel to lock in your battle kit.</p>
+          <p className="subtext">Enter your avatar tag, choose an element, or spin the wheel to lock in your battle kit.</p>
         </div>
 
         <div className="profile-inputs">
@@ -180,6 +197,23 @@ export function WheelSpin({ onAttuned }) {
               disabled={isSpinning}
             />
           </div>
+        </div>
+
+        <div className="element-select-group">
+          <label htmlFor="element-select">Choose your element</label>
+          <select
+            id="element-select"
+            value={selectedElement || ''}
+            onChange={(event) => handleElementSelect(event.target.value)}
+            disabled={isSpinning}
+          >
+            <option value="">Select an element...</option>
+            {WHEEL_SECTORS.map((sector) => (
+              <option key={sector.id} value={sector.id}>
+                {sector.label}{sector.id === 'IVARtar' ? ' (Rare)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Wheel Graphic Container */}
