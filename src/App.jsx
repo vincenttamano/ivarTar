@@ -4,9 +4,64 @@ import { ELEMENTS } from './data/elements.js';
 import { createFighterState, endTurnSpiritsEvoke, executeSkill, startTurn } from './systems/combatEngine.js';
 import { WheelSpin } from './components/WheelSpin.jsx';
 import { BattleScreen } from './components/BattleScreen.jsx';
+import airMoveSfx from '../IvartarAssets/airMoveSFX.mp3';
+import waterMoveSfx from '../IvartarAssets/waterMoveSFX.mp3';
+import fireMoveSfx from '../IvartarAssets/fireMoveSFX.mp3';
+import earthMoveSfx from '../IvartarAssets/earthMoveSFX.mp3';
+import fatalitySfx from '../IvartarAssets/fatalitySFX.mp3';
+import introCutscene from '../IvartarAssets/introCutscene.mp4';
+import transitionBackground from '../IvartarAssets/transitionBG.jpg';
+import ivarTarLogo from '../IvartarAssets/IVARtarLogo.jpg';
+
+const MOVE_SFX = {
+  Air: airMoveSfx,
+  Water: waterMoveSfx,
+  Fire: fireMoveSfx,
+  Earth: earthMoveSfx,
+  IVARtar: fireMoveSfx
+};
+
+const TRANSITION_DURATION = 2000;
+
+let activeMoveAudio = null;
+
+function playSound(source, volume = 0.7, durationMs = null) {
+  const audio = new Audio(source);
+  audio.volume = volume;
+  audio.play().catch(() => {});
+  if (durationMs) {
+    setTimeout(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }, durationMs);
+  }
+}
+
+function playMoveSound(source) {
+  if (activeMoveAudio) {
+    activeMoveAudio.pause();
+    activeMoveAudio.currentTime = 0;
+  }
+
+  activeMoveAudio = new Audio(source);
+  activeMoveAudio.volume = 0.7;
+  activeMoveAudio.play().catch(() => {});
+  const moveAudio = activeMoveAudio;
+
+  setTimeout(() => {
+    if (activeMoveAudio === moveAudio) {
+      moveAudio.pause();
+      moveAudio.currentTime = 0;
+      activeMoveAudio = null;
+    }
+  }, 3000);
+}
 
 export function App() {
   const [screen, setScreen] = useState('attunement'); // 'attunement' | 'battle' | 'result'
+  const [introState, setIntroState] = useState('transition-in');
+  const [showTransition, setShowTransition] = useState(introState === 'transition-in');
+  const [introSoundBlocked, setIntroSoundBlocked] = useState(false);
   const [player, setPlayer] = useState(null);
   const [opponent, setOpponent] = useState(null);
   const [turn, setTurn] = useState('player'); // 'player' | 'opponent'
@@ -17,11 +72,58 @@ export function App() {
 
   const [activeAction, setActiveAction] = useState(null); // { actor: 'player'|'opponent', moveKey: string, moveName: string }
 
+  const opponentNames = ['Shadow Morrow', 'Ashen Veyra', 'Ruin Calder', 'Night Vale', 'Ember Wraith', 'Frost Harrow'];
+
+  const finishIntro = useCallback(() => {
+    setIntroState('transition-out');
+    setShowTransition(true);
+    setTimeout(() => {
+      setIntroState('done');
+      setShowTransition(false);
+    }, TRANSITION_DURATION);
+  }, []);
+
+  useEffect(() => {
+    const favicon = document.querySelector('link[rel="icon"]');
+    if (favicon) favicon.href = ivarTarLogo;
+    const shortcutIcon = document.querySelector('link[rel="shortcut icon"]');
+    if (shortcutIcon) shortcutIcon.href = ivarTarLogo;
+  }, []);
+
+  const enableIntroSound = (event) => {
+    const video = event.currentTarget.previousElementSibling;
+    video.muted = false;
+    video.play().then(() => setIntroSoundBlocked(false)).catch(() => setIntroSoundBlocked(true));
+  };
+
+  useEffect(() => {
+    if (introState !== 'transition-in') return undefined;
+    const timer = setTimeout(() => {
+      setShowTransition(false);
+      setIntroState('intro');
+    }, TRANSITION_DURATION);
+    return () => clearTimeout(timer);
+  }, [introState]);
+
+  const transitionTo = useCallback((nextScreen) => {
+    setShowTransition(true);
+    setTimeout(() => {
+      setScreen(nextScreen);
+      setTimeout(() => setShowTransition(false), TRANSITION_DURATION / 2);
+    }, TRANSITION_DURATION / 2);
+  }, []);
+
   const appendLogs = useCallback((newLogs) => {
     if (!newLogs || newLogs.length === 0) return;
     const formatted = newLogs.map((item) => (typeof item === 'string' ? { text: item, type: 'info' } : item));
     setCombatLogs((prev) => [...prev, ...formatted]);
   }, []);
+
+  const finishBattle = useCallback((winnerName) => {
+    playSound(fatalitySfx, 0.85);
+    setWinner(winnerName);
+    transitionTo('result');
+  }, [transitionTo]);
 
   // Initialize Battle after Element Attunement
   const handleAttuned = (profileData) => {
@@ -36,16 +138,17 @@ export function App() {
     // Pick random element for Opponent
     const availableElements = ['Fire', 'Water', 'Air', 'Earth'];
     const aiElement = availableElements[Math.floor(Math.random() * availableElements.length)];
-    const opponentState = createFighterState('Shadow Morrow', 'M', aiElement, false);
+    const opponentName = opponentNames[Math.floor(Math.random() * opponentNames.length)];
+    const opponentState = createFighterState(opponentName, 'M', aiElement, false);
 
     setPlayer(playerState);
     setOpponent(opponentState);
     setTurn('player');
     setPhase('reading');
     setCombatLogs([
-      { text: `✨ Battle initialized! ${profileData.name} (${profileData.element}) vs Shadow Morrow (${aiElement}).`, type: 'special' }
+      { text: `✨ Battle initialized! ${profileData.name} (${profileData.element}) vs ${opponentName} (${aiElement}).`, type: 'special' }
     ]);
-    setScreen('battle');
+    transitionTo('battle');
   };
 
   // Player passes turn
@@ -58,14 +161,13 @@ export function App() {
     if (evokeRes.floaters.length > 0) setFloaters(evokeRes.floaters);
 
     if (evokeRes.opponent.hp <= 0) {
-      setWinner(evokeRes.player.name);
-      setScreen('result');
+      finishBattle(evokeRes.player.name);
       return;
     }
 
     setTurn('opponent');
     setPhase('resolving');
-  }, [appendLogs, opponent, player]);
+  }, [appendLogs, finishBattle, opponent, player]);
 
   // Execute confirmed skill gesture for Player
   const handlePlayerMove = useCallback((slotKey) => {
@@ -77,6 +179,7 @@ export function App() {
 
     setPhase('resolving');
     setActiveAction({ actor: 'player', moveKey: slotKey, moveName: skill.name, element: player.element });
+    playMoveSound(MOVE_SFX[player.element] || MOVE_SFX.Fire);
 
     const result = executeSkill(player, opponent, skill);
     if (result.success) {
@@ -87,8 +190,7 @@ export function App() {
 
       // Check win condition
       if (result.defender.hp <= 0) {
-        setWinner(result.attacker.name);
-        setScreen('result');
+        finishBattle(result.attacker.name);
         return;
       }
 
@@ -121,7 +223,7 @@ export function App() {
     } else {
       setPhase('reading');
     }
-  }, [appendLogs, handlePassTurnToOpponent, opponent, phase, player, turn]);
+  }, [appendLogs, finishBattle, handlePassTurnToOpponent, opponent, phase, player, turn]);
 
   // AI Opponent Turn Logic
   useEffect(() => {
@@ -153,6 +255,7 @@ export function App() {
 
         const chosenSkill = legalSkills[Math.floor(Math.random() * legalSkills.length)];
         setActiveAction({ actor: 'opponent', moveKey: chosenSkill.slot.toLowerCase(), moveName: chosenSkill.name, element: activeAi.element });
+        playMoveSound(MOVE_SFX[activeAi.element] || MOVE_SFX.Fire);
         const res = executeSkill(activeAi, activeUser, chosenSkill);
 
         if (res.success) {
@@ -175,8 +278,7 @@ export function App() {
       if (aiFloaters.length > 0) setFloaters(aiFloaters);
 
       if (activeUser.hp <= 0) {
-        setWinner(activeAi.name);
-        setScreen('result');
+        finishBattle(activeAi.name);
         return;
       }
 
@@ -187,8 +289,7 @@ export function App() {
       appendLogs(evokeRes.logs);
 
       if (activeUser.hp <= 0) {
-        setWinner(activeAi.name);
-        setScreen('result');
+        finishBattle(activeAi.name);
         return;
       }
 
@@ -202,13 +303,37 @@ export function App() {
     }, 1200);
 
     return () => clearTimeout(aiTimer);
-  }, [appendLogs, opponent, player, screen, turn]);
+  }, [appendLogs, finishBattle, opponent, player, screen, turn]);
 
   return (
     <div className="app-main-wrapper">
-      {screen === 'attunement' && <WheelSpin onAttuned={handleAttuned} />}
+      {introState === 'intro' && (
+        <div className="intro-cutscene-screen">
+          <video
+            className="intro-cutscene-video"
+            src={introCutscene}
+            autoPlay
+            playsInline
+            onCanPlay={(event) => {
+              event.currentTarget.muted = false;
+              event.currentTarget.play().catch(() => setIntroSoundBlocked(true));
+            }}
+            onEnded={finishIntro}
+          />
+          {introSoundBlocked && (
+            <button type="button" className="enable-intro-sound-btn" onClick={enableIntroSound}>
+              Enable sound
+            </button>
+          )}
+          <button type="button" className="skip-intro-btn" onClick={finishIntro}>
+            Skip cutscene
+          </button>
+        </div>
+      )}
 
-      {screen === 'battle' && player && opponent && (
+      {introState === 'done' && screen === 'attunement' && <WheelSpin onAttuned={handleAttuned} />}
+
+      {introState === 'done' && screen === 'battle' && player && opponent && (
         <BattleScreen
           player={player}
           opponent={opponent}
@@ -222,7 +347,7 @@ export function App() {
         />
       )}
 
-      {screen === 'result' && (
+      {introState === 'done' && screen === 'result' && (
         <div className="modal-overlay">
           <div className="modal-card glass-panel">
             <div className="result-icon">{winner === player?.name ? '🏆' : '💀'}</div>
@@ -235,15 +360,26 @@ export function App() {
             <button
               className="action-btn primary-btn"
               onClick={() => {
-                setScreen('attunement');
                 setPlayer(null);
                 setOpponent(null);
                 setWinner(null);
+                transitionTo('attunement');
               }}
             >
               Play Again ↻
             </button>
           </div>
+        </div>
+      )}
+
+      {showTransition && (
+        <div
+          className="page-transition-overlay"
+          style={{ '--transition-background': `url(${transitionBackground})` }}
+          aria-live="polite"
+          aria-label="Loading"
+        >
+          <div className="transition-loader" />
         </div>
       )}
     </div>

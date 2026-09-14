@@ -14,7 +14,7 @@ const TM_LABEL_TO_SLOT = {
   'Ultimate': 'ss'
 };
 
-export function SkillControls({ activePlayer, turn, phase, readerState, onConfirmMove, onEndTurn }) {
+export function SkillControls({ activePlayer, turn, phase, readerState, onConfirmMove, onEndTurn, onInsufficientEnergy }) {
   const skillSlotsList = [
     { key: 'atk', slot: GESTURE_SLOTS.ATTACK },
     { key: 'def', slot: GESTURE_SLOTS.DEFEND },
@@ -35,12 +35,20 @@ export function SkillControls({ activePlayer, turn, phase, readerState, onConfir
           const isUltimateCoolingDown = skill.slot === 'SS' && activePlayer.ultimateCooldown > 0;
           const isDisabled = turn !== 'player' || phase !== 'reading' || !isAffordable || isExhausted || isUltimateCoolingDown;
 
+          const handleSkillClick = () => {
+            if (!isAffordable) {
+              onInsufficientEnergy();
+              return;
+            }
+            onConfirmMove(key);
+          };
+
           return (
             <button
               key={key}
-              className={`skill-btn ${isDisabled ? 'disabled' : ''} ${readerState.predictedLabel === skill.tmLabel ? 'active-gesture' : ''}`}
-              onClick={() => onConfirmMove(key)}
-              disabled={isDisabled}
+              className={`skill-btn ${isDisabled || !isAffordable ? 'disabled' : ''} ${readerState.predictedLabel === skill.tmLabel ? 'active-gesture' : ''}`}
+              onClick={handleSkillClick}
+              disabled={turn !== 'player' || phase !== 'reading' || isExhausted || isUltimateCoolingDown}
               title={skill.description}
             >
               <div className="btn-top">
@@ -68,7 +76,7 @@ export function SkillControls({ activePlayer, turn, phase, readerState, onConfir
   );
 }
 
-export function GestureReader({ activePlayer, turn, phase, onConfirmMove, onEndTurn }) {
+export function GestureReader({ activePlayer, turn, phase, onConfirmMove, onEndTurn, onInsufficientEnergy }) {
   const [modelStatus, setModelStatus] = useState('loading'); // 'loading' | 'live' | 'manual'
   const [readerState, setReaderState] = useState({
     predictedLabel: 'None',
@@ -226,6 +234,7 @@ export function GestureReader({ activePlayer, turn, phase, onConfirmMove, onEndT
                 if (targetSkill && activePlayer.energy >= targetSkill.cost && !ultimateCoolingDown) {
                   onConfirmMove(slotKey);
                 } else {
+                  onInsufficientEnergy();
                   setReaderState((prev) => ({ ...prev, statusMsg: 'Not enough energy for this move!' }));
                 }
 
@@ -252,7 +261,7 @@ export function GestureReader({ activePlayer, turn, phase, onConfirmMove, onEndT
       isActive = false;
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [activePlayer, modelStatus, onConfirmMove, phase, turn]);
+  }, [activePlayer, modelStatus, onConfirmMove, onInsufficientEnergy, phase, turn]);
 
   return (
     <aside className="gesture-reader-container glass-panel">
@@ -260,7 +269,7 @@ export function GestureReader({ activePlayer, turn, phase, onConfirmMove, onEndT
         <div className="status-badge-row">
           <span className={`live-dot ${modelStatus === 'live' ? 'online' : 'offline'}`} />
           <span className="mode-label">
-            {modelStatus === 'live' ? 'CAMERA GESTURE FEED' : modelStatus === 'manual' ? 'MANUAL MODE' : 'CONNECTING CAMERA...'}
+            {modelStatus === 'live' ? 'CAMERA ONLINE' : modelStatus === 'manual' ? 'MANUAL CONTROLS' : 'CONNECTING...'}
           </span>
         </div>
         <div className="reader-header-actions">
@@ -286,7 +295,7 @@ export function GestureReader({ activePlayer, turn, phase, onConfirmMove, onEndT
             <span className="gesture-icon">
               {readerState.predictedLabel in TM_LABEL_TO_SLOT ? '✋' : '🔍'}
             </span>
-            <span className="gesture-text">{readerState.predictedLabel}</span>
+            <span className="gesture-text">{readerState.predictedLabel === 'None' ? 'Show a gesture' : readerState.predictedLabel}</span>
           </div>
         </div>
       </div>

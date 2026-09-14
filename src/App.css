@@ -63,7 +63,7 @@ body {
   justify-content: center;
   align-items: center;
   padding: 24px;
-  background: radial-gradient(circle at center, #1e1b4b 0%, #090d16 100%);
+  background: linear-gradient(rgba(9, 13, 22, 0.45), rgba(9, 13, 22, 0.72)), url('../IvartarAssets/transitionBG.jpg') center / cover fixed;
 }
 
 .wheel-card {
@@ -75,6 +75,31 @@ body {
   align-items: center;
   text-align: center;
   gap: 24px;
+  background: linear-gradient(rgba(9, 13, 22, 0.42), rgba(9, 13, 22, 0.62)), url('../IvartarAssets/4elementsBG.jpg') center / cover;
+}
+
+.name-required-notice {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  z-index: 20;
+  max-width: min(90vw, 360px);
+  padding: 12px 18px;
+  color: #fff7ed;
+  background: rgba(124, 45, 18, 0.95);
+  border: 1px solid #fb923c;
+  border-radius: 10px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: nameNoticeIn 0.2s ease-out;
+}
+
+@keyframes nameNoticeIn {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 .brand-header h1 {
@@ -115,11 +140,6 @@ body {
   text-align: left;
 }
 
-.input-group.short {
-  width: 100px;
-  flex: none;
-}
-
 .input-group label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -143,22 +163,6 @@ body {
   border-color: #38bdf8;
 }
 
-.element-select-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  text-align: left;
-}
-
-.element-select-group label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.element-select-group select,
 .loadout-field select {
   width: 100%;
   padding: 10px 14px;
@@ -170,7 +174,6 @@ body {
   outline: none;
 }
 
-.element-select-group select:focus,
 .loadout-field select:focus {
   border-color: #38bdf8;
 }
@@ -199,6 +202,15 @@ body {
   border-radius: 50%;
   box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
   position: relative;
+}
+
+.wheel-idle .wheel-canvas {
+  animation: idleWheelRotation 24s linear infinite;
+}
+
+@keyframes idleWheelRotation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .jackpot-glow {
@@ -234,6 +246,71 @@ body {
 @keyframes rainbowShift {
   0% { background-position: 0% center; }
   100% { background-position: 200% center; }
+}
+
+/* First-visit intro and full-screen page transitions. */
+.intro-cutscene-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #090d16;
+}
+
+.intro-cutscene-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.skip-intro-btn {
+  position: absolute;
+  right: clamp(18px, 4vw, 56px);
+  bottom: clamp(18px, 4vw, 42px);
+  padding: 9px 16px;
+  color: #fff7ed;
+  background: rgba(92, 52, 30, 0.88);
+  border: 1px solid rgba(245, 190, 130, 0.75);
+  border-radius: 8px;
+  font: 700 0.8rem var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+}
+
+.skip-intro-btn:hover {
+  background: rgba(125, 70, 38, 0.95);
+}
+
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: clamp(42px, 11vh, 110px);
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(20, 12, 8, 0.28), rgba(20, 12, 8, 0.52)),
+    var(--transition-background) center / cover no-repeat;
+  animation: none;
+}
+
+.transition-loader {
+  width: clamp(34px, 4vw, 54px);
+  height: clamp(34px, 4vw, 54px);
+  border: 5px solid rgba(245, 190, 130, 0.28);
+  border-top-color: #9a5a32;
+  border-right-color: #d08a55;
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(115, 62, 31, 0.75);
+  animation: transitionSpin 0.9s linear infinite;
+}
+
+@keyframes transitionSpin {
+  to { transform: rotate(360deg); }
 }
 
 /* Attunement Result */
@@ -1296,6 +1373,205 @@ body:has(.battle-screen-container) {
   .log-scroll-feed { max-height: 180px; }
 }
 
+/* Fighting-game battle layout: camera 1/5, duel 3/5, combat log 1/5. */
+@media (min-width: 761px) {
+  .battle-screen-container {
+    height: 100svh;
+    min-height: 0;
+    padding: clamp(6px, 1vw, 16px);
+    gap: clamp(6px, 1vw, 16px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr);
+    grid-template-rows: minmax(190px, 0.42fr) minmax(0, 0.58fr);
+    background: #080d17;
+  }
+
+  .arena-stage,
+  .stickman-and-log-row {
+    display: contents;
+  }
+
+  .camera-column {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: clamp(6px, 1vw, 12px);
+  }
+
+  .fighter-stack {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-height: 0;
+    padding-top: clamp(10px, 1.5vh, 24px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(40px, 5vw, 76px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.34fr) minmax(0, 1fr);
+    gap: clamp(6px, 1vw, 14px);
+    overflow: hidden;
+  }
+
+  .fighter-stack .fighter-card {
+    min-height: 0;
+    padding: clamp(7px, 1vw, 14px);
+    gap: clamp(8px, 1vw, 18px);
+    align-self: start;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    overflow: hidden;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .fighter-stack .player-stage { grid-column: 1; grid-row: 1; }
+  .fighter-stack .arena-center-vs { grid-column: 2; grid-row: 1; }
+  .fighter-stack .opponent-stage { grid-column: 3; grid-row: 1; }
+
+  .fighter-stack .portrait-frame {
+    width: clamp(52px, 6vw, 100px);
+    height: clamp(52px, 6vw, 100px);
+  }
+
+  .fighter-stack .fighter-details {
+    min-width: 0;
+    gap: clamp(4px, 0.6vw, 10px);
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+  }
+
+  .fighter-stack .fighter-details::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fighter-stack .fighter-name-row h3 {
+    font-size: clamp(0.75rem, 1.25vw, 1.2rem);
+  }
+
+  .fighter-stack .stat-label-row,
+  .fighter-stack .energy-pips-row,
+  .fighter-stack .status-badges-grid,
+  .fighter-stack .companion-board-state {
+    font-size: clamp(0.62rem, 0.8vw, 0.85rem);
+  }
+
+  .fighter-stack .arena-center-vs {
+    align-self: center;
+  }
+
+  .stickman-arena-card {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+    min-height: 0;
+    height: 100%;
+    padding: clamp(8px, 1vw, 18px);
+    background-color: rgba(8, 13, 23, 0.76);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    z-index: 1;
+  }
+
+  .fighter-stack {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .fighter-stack .fighter-card,
+  .fighter-stack .arena-center-vs {
+    pointer-events: auto;
+  }
+
+  .stickman-stage-viewport {
+    min-height: 0;
+    height: 100%;
+    background: rgba(8, 13, 23, 0.2);
+  }
+
+  .combat-log-container {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    min-height: 0;
+    height: 100%;
+    padding: clamp(8px, 1vw, 16px);
+    background: rgba(8, 13, 23, 0.86);
+  }
+
+  .log-scroll-feed {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .gesture-reader-container {
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .camera-column > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .skill-controls-panel {
+    min-height: 0;
+  }
+
+  .skill-controls-panel .skill-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.energy-notice {
+  position: fixed;
+  left: 50%;
+  top: 14%;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  color: #fff7ed;
+  background: rgba(124, 45, 18, 0.94);
+  border: 1px solid #fb923c;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 18px rgba(249, 115, 22, 0.35);
+  transform: translateX(-50%);
+  animation: energyNoticeIn 0.2s ease-out, energyNoticeOut 0.35s ease-in 1.45s forwards;
+}
+
+.energy-notice strong { font-size: 0.9rem; }
+.energy-notice span { font-size: 0.82rem; color: #fed7aa; }
+
+@keyframes energyNoticeIn {
+  from { opacity: 0; transform: translate(-50%, -10px) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes energyNoticeOut {
+  to { opacity: 0; transform: translate(-50%, -8px) scale(0.98); }
+}
+
+@media (max-width: 760px) {
+  .energy-notice {
+    width: min(90vw, 320px);
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    text-align: center;
+  }
+}
+
 .stickman-body-wrap {
   position: relative;
   display: flex;
@@ -1410,13 +1686,6 @@ body:has(.battle-screen-container) {
   to { transform: translateY(-3px); }
 }
 
-/* Placeholder arena backdrop — swap for a real background-image later */
-.stickman-stage-viewport {
-  background-image: url('/model/Map.jpg');
-  background-size: cover;
-  background-position: center;
-}
-
 .stickman-portrait-frame {
   position: relative;
   width: 220px;
@@ -1495,4 +1764,155 @@ body:has(.battle-screen-container) {
   stroke-dasharray: 8 8;
   animation: spin 1.2s linear infinite;
   pointer-events: none;
+}
+
+/* Scale duel fighters and move FX with the center panel. */
+@media (min-width: 761px) {
+  .stickman-stage-viewport {
+    padding: clamp(18px, 3vh, 40px) clamp(28px, 5vw, 100px);
+  }
+
+  .stickman-portrait-frame {
+    width: clamp(190px, 15vw, 300px);
+    height: clamp(280px, 42vh, 520px);
+  }
+
+  .stickman-portrait {
+    width: 100%;
+    height: 100%;
+  }
+
+  .fx-middle-zone {
+    left: 25%;
+    right: 25%;
+    bottom: clamp(34px, 6vh, 72px);
+    height: clamp(76px, 10vh, 124px);
+  }
+
+  .fx-elemental-ball {
+    width: clamp(34px, 3vw, 58px);
+    height: clamp(34px, 3vw, 58px);
+    box-shadow: 0 0 34px #f97316;
+  }
+
+  .fx-laser-beam {
+    height: clamp(18px, 2vh, 30px);
+    border-radius: 15px;
+    box-shadow: 0 0 28px #38bdf8;
+  }
+
+  .fx-super-storm {
+    height: clamp(58px, 8vh, 100px);
+  }
+
+  .player-stickman.pose-atk { transform: translateX(clamp(44px, 4vw, 84px)); }
+  .npc-stickman.pose-atk { transform: translateX(clamp(-84px, -4vw, -44px)); }
+}
+
+@media (max-width: 760px) {
+  .stickman-portrait-frame {
+    width: clamp(150px, 42vw, 220px);
+    height: clamp(230px, 65vw, 360px);
+  }
+
+  .stickman-portrait {
+    width: 100%;
+    height: 100%;
+  }
+
+  .fx-elemental-ball {
+    width: 34px;
+    height: 34px;
+  }
+
+  .fx-laser-beam { height: 18px; }
+  .fx-super-storm { height: 60px; }
+}
+
+.enable-intro-sound-btn {
+  position: absolute;
+  left: clamp(18px, 4vw, 56px);
+  bottom: clamp(18px, 4vw, 42px);
+  padding: 9px 16px;
+  color: #fff7ed;
+  background: rgba(92, 52, 30, 0.88);
+  border: 1px solid rgba(245, 190, 130, 0.75);
+  border-radius: 8px;
+  font: 700 0.8rem var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+}
+
+.enable-intro-sound-btn:hover {
+  background: rgba(125, 70, 38, 0.95);
+}
+
+/* Tablet layout: preserve the three-panel battle composition without crowding. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .battle-screen-container {
+    padding: 8px;
+    gap: 8px;
+    grid-template-columns: minmax(130px, 1fr) minmax(0, 3fr) minmax(130px, 1fr);
+  }
+
+  .fighter-stack {
+    grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .fighter-stack .fighter-card {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 6px;
+    text-align: center;
+  }
+
+  .fighter-stack .portrait-frame {
+    width: clamp(76px, 9vw, 112px);
+    height: clamp(110px, 16vh, 170px);
+  }
+
+  .fighter-stack .fighter-details {
+    width: 100%;
+    align-items: stretch;
+    text-align: left;
+    gap: 4px;
+  }
+
+  .fighter-stack .fighter-name-row h3 {
+    font-size: clamp(0.68rem, 1.2vw, 0.95rem);
+  }
+
+  .fighter-stack .element-tag {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+
+  .stickman-stage-viewport {
+    padding: 12px clamp(10px, 2vw, 28px);
+  }
+
+  .stickman-portrait-frame {
+    width: clamp(120px, 14vw, 180px);
+    height: clamp(190px, 30vh, 280px);
+  }
+
+  .fx-middle-zone {
+    left: 18%;
+    right: 18%;
+    bottom: 34px;
+    height: 72px;
+  }
+
+  .wheel-card {
+    max-width: min(540px, 92vw);
+    padding: clamp(20px, 4vw, 36px);
+  }
+
+  .wheel-canvas-container {
+    width: min(320px, 62vw);
+    height: min(320px, 62vw);
+  }
 }

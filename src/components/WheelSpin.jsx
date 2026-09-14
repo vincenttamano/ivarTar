@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { ELEMENTS } from '../data/elements.js';
+import airMoveSfx from '../../IvartarAssets/airMoveSFX.mp3';
+import waterMoveSfx from '../../IvartarAssets/waterMoveSFX.mp3';
+import fireMoveSfx from '../../IvartarAssets/fireMoveSFX.mp3';
+import earthMoveSfx from '../../IvartarAssets/earthMoveSFX.mp3';
+import ivarTarSfx from '../../IvartarAssets/IVARtarSFX.mp3';
+import spinWheelSfx from '../../IvartarAssets/spinwheelSFX.mp3';
+import wheelBgm from '../../IvartarAssets/wheelBGM.mp3';
+
+const ELEMENT_SFX = {
+  Air: airMoveSfx,
+  Water: waterMoveSfx,
+  Fire: fireMoveSfx,
+  Earth: earthMoveSfx,
+  IVARtar: ivarTarSfx
+};
 
 const WHEEL_SECTORS = [
   { id: 'Fire', label: 'Fire', color: '#f97316', weight: 0.2475 },
@@ -23,14 +38,31 @@ export function rollWeightedElement() {
 
 export function WheelSpin({ onAttuned }) {
   const [playerName, setPlayerName] = useState('');
-  const [playerAvatar, setPlayerAvatar] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
   const [rotationDegrees, setRotationDegrees] = useState(0);
   const [showJackpotEffect, setShowJackpotEffect] = useState(false);
   const [selectedMoves, setSelectedMoves] = useState({});
+  const [showNameNotice, setShowNameNotice] = useState(false);
 
   const canvasRef = useRef(null);
+
+  const requirePlayerName = () => {
+    setShowNameNotice(true);
+    setTimeout(() => setShowNameNotice(false), 2200);
+  };
+
+  useEffect(() => {
+    const audio = new Audio(wheelBgm);
+    audio.loop = true;
+    audio.volume = 0.2;
+    audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
 
   // Render wheel slices on canvas
   useEffect(() => {
@@ -93,6 +125,13 @@ export function WheelSpin({ onAttuned }) {
 
   const handleSpin = () => {
     if (isSpinning) return;
+    if (!playerName.trim()) {
+      requirePlayerName();
+      return;
+    }
+    const spinAudio = new Audio(spinWheelSfx);
+    spinAudio.volume = 0.7;
+    spinAudio.play().catch(() => {});
     setIsSpinning(true);
     setShowJackpotEffect(false);
 
@@ -110,6 +149,9 @@ export function WheelSpin({ onAttuned }) {
     setRotationDegrees(totalRotation);
 
     setTimeout(() => {
+      const resultAudio = new Audio(ELEMENT_SFX[drawnId] || fireMoveSfx);
+      resultAudio.volume = 0.7;
+      resultAudio.play().catch(() => {});
       setSelectedElement(drawnId);
       setIsSpinning(false);
 
@@ -126,28 +168,15 @@ export function WheelSpin({ onAttuned }) {
     }, 4000);
   };
 
-  const handleElementSelect = (elementId) => {
-    setSelectedElement(elementId || null);
-    setShowJackpotEffect(elementId === 'IVARtar');
-
-    if (elementId === 'IVARtar') {
-      setSelectedMoves({
-        atk: ELEMENTS.IVARtar.skills.atk,
-        def: ELEMENTS.IVARtar.skills.def,
-        atkS: ELEMENTS.IVARtar.skills.atkS,
-        defS: ELEMENTS.IVARtar.skills.defS,
-        ss: ELEMENTS.IVARtar.skills.ss
-      });
-    } else {
-      setSelectedMoves({});
-    }
-  };
-
   const handleEnterArena = () => {
     if (!selectedElement) return;
+    if (!playerName.trim()) {
+      requirePlayerName();
+      return;
+    }
     onAttuned({
       name: playerName.trim() || 'Astra',
-      avatar: playerAvatar.trim().toUpperCase() || (playerName[0] ? playerName[0].toUpperCase() : 'A'),
+      avatar: playerName[0] ? playerName[0].toUpperCase() : 'A',
       element: selectedElement,
       skills: selectedElement === 'IVARtar' ? selectedMoves : null
     });
@@ -167,13 +196,13 @@ export function WheelSpin({ onAttuned }) {
     <div className="wheel-screen-wrapper">
       <div className="wheel-card glass-panel">
         <div className="brand-header">
-          <span className="brand-badge">ELEMENTAL BATTLER</span>
-          <h1>Attune Your Spirit</h1>
-          <p className="subtext">Enter your avatar tag, choose an element, or spin the wheel to lock in your battle kit.</p>
+          <span className="brand-badge">LEGEND OF IVARTAR</span>
+          <h1>Choose Your Element</h1>
+          <p className="subtext">Enter your callsign and spin the wheel to discover your elemental power.</p>
         </div>
 
         <div className="profile-inputs">
-          <div className="input-group">
+          <div className="input-group name-input-group">
             <label htmlFor="player-name-input">Callsign / Name</label>
             <input
               id="player-name-input"
@@ -185,42 +214,19 @@ export function WheelSpin({ onAttuned }) {
               disabled={isSpinning}
             />
           </div>
-          <div className="input-group short">
-            <label htmlFor="player-avatar-input">Avatar Mark</label>
-            <input
-              id="player-avatar-input"
-              type="text"
-              placeholder="P"
-              maxLength={2}
-              value={playerAvatar}
-              onChange={(e) => setPlayerAvatar(e.target.value)}
-              disabled={isSpinning}
-            />
-          </div>
         </div>
 
-        <div className="element-select-group">
-          <label htmlFor="element-select">Choose your element</label>
-          <select
-            id="element-select"
-            value={selectedElement || ''}
-            onChange={(event) => handleElementSelect(event.target.value)}
-            disabled={isSpinning}
-          >
-            <option value="">Select an element...</option>
-            {WHEEL_SECTORS.map((sector) => (
-              <option key={sector.id} value={sector.id}>
-                {sector.label}{sector.id === 'IVARtar' ? ' (Rare)' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
+        {showNameNotice && (
+          <div className="name-required-notice" role="alert">
+            Please enter your name before continuing.
+          </div>
+        )}
 
         {/* Wheel Graphic Container */}
         <div className="wheel-stage">
           <div className="wheel-pointer">▼</div>
           <div
-            className={`wheel-canvas-container ${isSpinning ? 'spinning' : ''} ${showJackpotEffect ? 'jackpot-glow' : ''}`}
+            className={`wheel-canvas-container ${isSpinning ? 'spinning' : 'wheel-idle'} ${showJackpotEffect ? 'jackpot-glow' : ''}`}
             style={{
               transform: `rotate(${rotationDegrees}deg)`,
               transition: isSpinning ? 'transform 4s cubic-bezier(0.15, 0.90, 0.20, 1.00)' : 'none'
@@ -232,7 +238,7 @@ export function WheelSpin({ onAttuned }) {
 
         {/* Wheel Odds Footer */}
         <div className="wheel-odds-bar">
-          <span>Odds: Fire 24.75% · Water 24.75% · Air 24.75% · Earth 24.75% · <strong className="rainbow-text">IVARtar 1%</strong></span>
+          <span>Element chances: Fire 24.75% · Water 24.75% · Air 24.75% · Earth 24.75% · <strong className="rainbow-text">IVARtar 1%</strong></span>
         </div>
 
         {/* Results Banner */}
@@ -252,8 +258,8 @@ export function WheelSpin({ onAttuned }) {
             {showJackpotEffect && (
               <div className="loadout-picker">
                 <div className="loadout-heading">
-                  <strong>Build your move set</strong>
-                  <span>Choose one move for each gesture.</span>
+                  <strong>Customize your IVARtar moves</strong>
+                  <span>Assign a skill to each combat gesture.</span>
                 </div>
                 <div className="loadout-grid">
                   {moveSlots.map(([slotKey, label]) => (

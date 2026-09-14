@@ -85,6 +85,7 @@ function StickmanPortrait({ element, pose, animKey }) {
 export function StickmanArena({
   playerElement,
   opponentElement,
+  battleBackground,
   activeAction,
   playerSpirits,
   playerGolemHp,
@@ -130,22 +131,18 @@ export function StickmanArena({
   }, [activeAction]);
 
   return (
-    <div className="stickman-arena-card glass-panel">
-      <div className="arena-title-bar">
-        <span className="arena-label">2D ELEMENTAL STICKMAN DUEL</span>
-        {activeAction && (
-          <span className="active-action-banner rainbow-text">
-            {activeAction.actor === 'player' ? 'USER' : 'NPC'} USED {activeAction.moveName?.toUpperCase()}!
-          </span>
-        )}
-      </div>
-
+    <div
+      className="stickman-arena-card glass-panel"
+      style={{
+        backgroundImage: `linear-gradient(rgba(8, 13, 23, 0.34), rgba(8, 13, 23, 0.68)), url(${battleBackground})`
+      }}
+    >
       <div className="stickman-stage-viewport">
         <div className="stage-floor-line" />
 
-        {/* USER (LEFT) */}
+        {/* PLAYER (LEFT) */}
         <div className={`stickman-wrapper player-stickman pose-${playerPose}`}>
-          <div className="stickman-tag">USER</div>
+          <div className="stickman-tag">YOU</div>
           <div className="stickman-body-wrap">
             <OrbitingSummons spirits={playerSpirits} />
             <StickmanPortrait element={playerElement} pose={playerPose} animKey={`p-${actionSeq}`} />
@@ -164,9 +161,9 @@ export function StickmanArena({
           )}
         </div>
 
-        {/* NPC (RIGHT) */}
+        {/* ENEMY (RIGHT) */}
         <div className={`stickman-wrapper npc-stickman pose-${opponentPose}`}>
-          <div className="stickman-tag npc-tag">NPC</div>
+          <div className="stickman-tag npc-tag">ENEMY</div>
           <div className="stickman-body-wrap">
             <OrbitingSummons spirits={opponentSpirits} />
             <StickmanPortrait element={opponentElement} pose={opponentPose} animKey={`n-${actionSeq}`} />

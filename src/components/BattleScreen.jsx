@@ -1,8 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ELEMENTS } from '../data/elements.js';
 import { STATUS_META } from '../systems/statusSystem.js';
 import { GestureReader, SkillControls } from './GestureReader.jsx';
 import { StickmanArena } from './StickmanArena.jsx';
+import gameBGM from '../../IvartarAssets/gameBGM.mp3';
+import volcanoBackground from '../../IvartarAssets/volcanoBG.png';
+import desertBackground from '../../IvartarAssets/desertBG.jpg';
+import forestBackground from '../../IvartarAssets/forestBG.jpg';
+import winterBackground from '../../IvartarAssets/winterBG.jpg';
+
+const ELEMENT_BACKGROUNDS = {
+  Fire: volcanoBackground,
+  Air: desertBackground,
+  Earth: forestBackground,
+  Water: winterBackground
+};
 
 export function BattleScreen({
   player,
@@ -18,6 +30,18 @@ export function BattleScreen({
   const [activeFloaters, setActiveFloaters] = useState([]);
   const [playerHitAnim, setPlayerHitAnim] = useState(false);
   const [opponentHitAnim, setOpponentHitAnim] = useState(false);
+  const [showEnergyNotice, setShowEnergyNotice] = useState(false);
+
+  const notifyInsufficientEnergy = useCallback(() => {
+    setShowEnergyNotice(false);
+    requestAnimationFrame(() => setShowEnergyNotice(true));
+  }, []);
+
+  useEffect(() => {
+    if (!showEnergyNotice) return undefined;
+    const timer = setTimeout(() => setShowEnergyNotice(false), 1800);
+    return () => clearTimeout(timer);
+  }, [showEnergyNotice]);
 
   // Floating text animation handler
   useEffect(() => {
@@ -49,6 +73,19 @@ export function BattleScreen({
 
   const playerElData = ELEMENTS[player.element] || ELEMENTS.Fire;
   const opponentElData = ELEMENTS[opponent.element] || ELEMENTS.Fire;
+  const opponentBackground = ELEMENT_BACKGROUNDS[opponent.element] || desertBackground;
+
+  useEffect(() => {
+    const audio = new Audio(gameBGM);
+    audio.loop = true;
+    audio.volume = 0.2;
+    audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
 
   const playerSkills = player.skills || playerElData.skills || {};
 
@@ -66,7 +103,6 @@ export function BattleScreen({
         '--battle-bg': playerElData.bgGradient
       }}
     >
-      {/* SECTION 1: TOP CHARACTER PORTRAITS & STATS */}
       <main className="arena-stage">
         <div className="camera-column">
           <GestureReader
@@ -75,6 +111,16 @@ export function BattleScreen({
             phase={phase}
             onConfirmMove={onConfirmMove}
             onEndTurn={onEndTurn}
+            onInsufficientEnergy={notifyInsufficientEnergy}
+          />
+          <SkillControls
+            activePlayer={activePlayerObj}
+            turn={turn}
+            phase={phase}
+            readerState={{ predictedLabel: 'None' }}
+            onConfirmMove={onConfirmMove}
+            onEndTurn={onEndTurn}
+            onInsufficientEnergy={notifyInsufficientEnergy}
           />
         </div>
 
@@ -243,22 +289,14 @@ export function BattleScreen({
           </div>
         </section>
 
-        <SkillControls
-          activePlayer={activePlayerObj}
-          turn={turn}
-          phase={phase}
-          readerState={{ predictedLabel: 'None' }}
-          onConfirmMove={onConfirmMove}
-          onEndTurn={onEndTurn}
-        />
         </div>
       </main>
 
-      {/* SECTION 3: STICKMAN ARENA & COMBAT LOG */}
       <section className="stickman-and-log-row">
         <StickmanArena
           playerElement={player.element}
           opponentElement={opponent.element}
+          battleBackground={opponentBackground}
           activeAction={activeAction}
           playerSpirits={player.spirits}
           playerGolemHp={player.golemHp}
@@ -268,6 +306,13 @@ export function BattleScreen({
           opponentGolemMaxHp={opponent.maxGolemHp}
 
         />
+
+        {showEnergyNotice && (
+          <div className="energy-notice" role="alert">
+            <strong>Not enough energy</strong>
+            <span>Try another move.</span>
+          </div>
+        )}
 
         <div className="combat-log-container glass-panel">
           <div className="log-header">
